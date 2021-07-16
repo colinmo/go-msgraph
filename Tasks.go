@@ -1,6 +1,7 @@
 package msgraph
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -32,4 +33,19 @@ func (t Tasks) GetByTitle(title string) (Task, error) {
 		}
 	}
 	return Task{}, ErrFindTask
+}
+
+func GetMyTasks(u User) (Tasks, error) {
+
+	if u.graphClient == nil {
+		return Tasks{}, ErrNotGraphClientSourced
+	}
+	resource := fmt.Sprintf("/users/%v/planner/tasks", u.ID)
+
+	var marsh struct {
+		Tasks Tasks `json:"value"`
+	}
+	err := u.graphClient.makeGETAPICall(resource, nil, &marsh)
+	marsh.Tasks.setGraphClient(u.graphClient)
+	return marsh.Tasks, err
 }
