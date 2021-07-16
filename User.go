@@ -140,3 +140,18 @@ func (u User) Equal(other User) bool {
 		u.Mail == other.Mail && u.MobilePhone == other.MobilePhone && u.PreferredLanguage == other.PreferredLanguage &&
 		u.Surname == other.Surname && u.UserPrincipalName == other.UserPrincipalName
 }
+
+// CM
+func (u User) ListTasks() (Tasks, error) {
+	if u.graphClient == nil {
+		return Tasks{}, ErrNotGraphClientSourced
+	}
+	resource := fmt.Sprintf("/users/%v/planner/tasks", u.ID)
+
+	var marsh struct {
+		Tasks Tasks `json:"value"`
+	}
+	err := u.graphClient.makeGETAPICall(resource, nil, &marsh)
+	marsh.Tasks.setGraphClient(u.graphClient)
+	return marsh.Tasks, err
+}
