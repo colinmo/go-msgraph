@@ -242,11 +242,12 @@ func (g *GraphClient) UnmarshalJSON(data []byte) error {
 // CM
 func (g *GraphClient) GetTasks(u User) (Tasks, error) {
 	resource := fmt.Sprintf("/users/%s/planner/tasks", u.ID)
-
+	data := url.Values{}
+	data.Add("$expand", "details")
 	var marsh struct {
 		Tasks Tasks `json:"value"`
 	}
-	err := g.makeGETAPICall(resource, nil, &marsh)
+	err := g.makeGETAPICall(resource, data, &marsh)
 	marsh.Tasks.setGraphClient(g)
 	return marsh.Tasks, err
 }

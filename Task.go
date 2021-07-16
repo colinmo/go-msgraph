@@ -59,10 +59,12 @@ type Task struct {
 	OrderHint                string
 	PercentComplete          int
 	PlanID                   string
+	Priority                 int
 	PreviewType              string
 	ReferenceCount           int
 	StartDateTime            string
 	Title                    string
+	Details                  TaskDetails
 	graphClient              *GraphClient // the graphClient that created this instance
 }
 
@@ -73,6 +75,25 @@ func (t Task) String() string {
 // setGraphClient sets the graphClient instance in this instance and all child-instances (if any)
 func (t *Task) setGraphClient(graphClient *GraphClient) {
 	t.graphClient = graphClient
+}
+
+type ChecklistItem struct {
+	Title     string `json:"title"`
+	IsChecked bool   `json:"ischecked"`
+}
+
+type ExternalReference struct {
+	Alias           string `json:"alias"`
+	PreviewPriority string `json:"previewPriority"`
+	Type            string `json:"type"`
+}
+
+type TaskDetails struct {
+	Description string                       `json:"description"`
+	PreviewType string                       `json:"previewType"`
+	ID          string                       `json:"id"`
+	References  map[string]ExternalReference `json:"references"`
+	Checklist   map[string]ChecklistItem     `json:"checklist"`
 }
 
 // UnmarshalJSON implements the json unmarshal to be used by the json-library
@@ -95,10 +116,12 @@ func (t *Task) UnmarshalJSON(data []byte) error {
 		OrderHint                string                       `json:"orderHint"`
 		PercentComplete          int                          `json:"percentComplete"`
 		PlanID                   string                       `json:"planId"`
+		Priority                 int                          `json:"priority"`
 		PreviewType              string                       `json:"previewType"`
 		ReferenceCount           int                          `json:"referenceCount"`
 		StartDateTime            string                       `json:"startDateTime"`
 		Title                    string                       `json:"title"`
+		Details                  TaskDetails                  `json:"details"`
 	}{}
 	err := json.Unmarshal(data, &tmp)
 	if err != nil {
@@ -122,9 +145,11 @@ func (t *Task) UnmarshalJSON(data []byte) error {
 	t.PercentComplete = tmp.PercentComplete
 	t.PlanID = tmp.PlanID
 	t.PreviewType = tmp.PreviewType
+	t.Priority = tmp.Priority
 	t.ReferenceCount = tmp.ReferenceCount
 	t.StartDateTime = tmp.StartDateTime
 	t.Title = tmp.Title
+	t.Details = tmp.Details
 
 	return nil
 }
