@@ -8,11 +8,12 @@ import (
 
 // Token struct holds the Microsoft Graph API authentication token used by GraphClient to authenticate API-requests to the ms graph API
 type Token struct {
-	TokenType   string    // should always be "Bearer" for msgraph API-calls
-	NotBefore   time.Time // time when the access token starts to be valid
-	ExpiresOn   time.Time // time when the access token expires
-	Resource    string    // will most likely always be https://graph.microsoft.com, hence the BaseURL
-	AccessToken string    // the access-token itself
+	TokenType    string    // should always be "Bearer" for msgraph API-calls
+	NotBefore    time.Time // time when the access token starts to be valid
+	ExpiresOn    time.Time // time when the access token expires
+	Resource     string    // will most likely always be https://graph.microsoft.com, hence the BaseURL
+	AccessToken  string    // the access-token itself
+	RefreshToken string
 }
 
 func (t Token) String() string {
@@ -69,11 +70,12 @@ func (t Token) WantsToBeRefreshed() bool {
 // the current time.Now() is after NotBefore and before ExpiresOn
 func (t *Token) UnmarshalJSON(data []byte) error {
 	tmp := struct {
-		TokenType   string `json:"token_type"`        // should normally be "Bearer"
-		ExpiresOn   int64  `json:"expires_on,string"` // = UNIX timestamp, parse to int64 immediately
-		NotBefore   int64  `json:"not_before,string"` // = UNIX timestamp, parse to int64 immediately
-		Resource    string `json:"resource"`          // will typically be https://graph.microsoft.com or wherever it came from
-		AccessToken string `json:"access_token"`      // the actual access token - veeery long string
+		TokenType    string `json:"token_type"`        // should normally be "Bearer"
+		ExpiresOn    int64  `json:"expires_on,string"` // = UNIX timestamp, parse to int64 immediately
+		NotBefore    int64  `json:"not_before,string"` // = UNIX timestamp, parse to int64 immediately
+		Resource     string `json:"resource"`          // will typically be https://graph.microsoft.com or wherever it came from
+		AccessToken  string `json:"access_token"`      // the actual access token - veeery long string
+		RefreshToken string `json:"refresh_token"`
 		//ExpiresIn   string `json:"expires_in"` // not used
 	}{}
 
@@ -87,6 +89,7 @@ func (t *Token) UnmarshalJSON(data []byte) error {
 	t.NotBefore = time.Unix(tmp.NotBefore, 0)
 	t.Resource = tmp.Resource
 	t.AccessToken = tmp.AccessToken
+	t.RefreshToken = tmp.RefreshToken
 
 	if t.HasExpired() {
 		return fmt.Errorf("Access-Token ExpiresOn %v is before current system-time %v", t.ExpiresOn, time.Now())

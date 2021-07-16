@@ -33,6 +33,11 @@ type IdentitySet struct {
 	User        Identity
 }
 
+type Plan struct {
+	ID    string `json:"id"`
+	Title string `json:"title"`
+}
+
 // Task represents a single calendar of a user
 //
 // See https://docs.microsoft.com/en-us/graph/api/resources/plannerTask?view=graph-rest-1.0

@@ -35,8 +35,8 @@ func (g *GraphClient) String() string {
 		firstPart = g.ClientSecret[0:3]
 		lastPart = g.ClientSecret[len(g.ClientSecret)-3:]
 	}
-	return fmt.Sprintf("GraphClient(TenantID: %v, ApplicationID: %v, ClientSecret: %v...%v, Token validity: [%v - %v])",
-		g.TenantID, g.ApplicationID, firstPart, lastPart, g.token.NotBefore, g.token.ExpiresOn)
+	return fmt.Sprintf("GraphClient(TenantID: %v, ApplicationID: %v, ClientSecret: %v...%v, Token validity: [%v - %v], Token: %v)",
+		g.TenantID, g.ApplicationID, firstPart, lastPart, g.token.NotBefore, g.token.ExpiresOn, g.token.GetAccessToken())
 }
 
 // NewGraphClient creates a new GraphClient instance with the given parameters and grab's a token.
@@ -60,6 +60,7 @@ func (g *GraphClient) refreshToken() error {
 	data.Add("client_id", g.ApplicationID)
 	data.Add("client_secret", g.ClientSecret)
 	data.Add("resource", BaseURL)
+	data.Add("scopes", "Tasks.ReadWrite Tasks.ReadWrite.Shared User.Read profile openid email")
 
 	u, err := url.ParseRequestURI(LoginBaseURL)
 	if err != nil {
@@ -239,8 +240,8 @@ func (g *GraphClient) UnmarshalJSON(data []byte) error {
 }
 
 // CM
-func (g *GraphClient) GetMyTasks() (Tasks, error) {
-	resource := "/users/me/planner/tasks"
+func (g *GraphClient) GetTasks(u User) (Tasks, error) {
+	resource := fmt.Sprintf("/users/%s/planner/tasks", u.ID)
 
 	var marsh struct {
 		Tasks Tasks `json:"value"`
@@ -248,4 +249,39 @@ func (g *GraphClient) GetMyTasks() (Tasks, error) {
 	err := g.makeGETAPICall(resource, nil, &marsh)
 	marsh.Tasks.setGraphClient(g)
 	return marsh.Tasks, err
+}
+
+func (g *GraphClient) GetPlanById(id string) (Plan, error) {
+	resource := fmt.Sprintf("/planner/plans/%s", id)
+
+	plan := Plan{}
+	err := g.makeGETAPICall(resource, nil, &plan)
+	return plan, err
+}
+
+func (g *GraphClient) SetToken(t Token) (*GraphClient, error) {
+	g.token = t
+
+	return g, nil
+}
+
+func NewGraphClientRefresh(
+	tenantID string,
+	applicationID string,
+	clientSecret string,
+	accessToken string,
+	refreshToken string,
+	scopes string,
+	expires int64,
+) (*GraphClient, error) {
+	t := Token{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		ExpiresOn:    time.Unix(expires, 0)}
+	g := GraphClient{
+		TenantID:      tenantID,
+		ApplicationID: applicationID,
+		ClientSecret:  clientSecret,
+		token:         t}
+	return &g, nil
 }
