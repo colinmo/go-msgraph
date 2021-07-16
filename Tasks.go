@@ -35,7 +35,7 @@ func (t Tasks) GetByTitle(title string) (Task, error) {
 	return Task{}, ErrFindTask
 }
 
-func GetMyTasks(u User) (Tasks, error) {
+func GetTasks(u User) (Tasks, error) {
 
 	if u.graphClient == nil {
 		return Tasks{}, ErrNotGraphClientSourced
