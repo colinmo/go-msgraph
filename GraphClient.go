@@ -237,3 +237,15 @@ func (g *GraphClient) UnmarshalJSON(data []byte) error {
 	}
 	return nil
 }
+
+// CM
+func (g *GraphClient) GetMyTasks() (Tasks, error) {
+	resource := "/users/me/planner/tasks"
+
+	var marsh struct {
+		Tasks Tasks `json:"value"`
+	}
+	err := g.makeGETAPICall(resource, nil, &marsh)
+	marsh.Tasks.setGraphClient(g)
+	return marsh.Tasks, err
+}

@@ -49,14 +49,3 @@ func (t Tasks) GetTasks(u User) (Tasks, error) {
 	marsh.Tasks.setGraphClient(u.graphClient)
 	return marsh.Tasks, err
 }
-
-func (graphClient *GraphClient) GetMyTasks() (Tasks, error) {
-	resource := "/users/me/planner/tasks"
-
-	var marsh struct {
-		Tasks Tasks `json:"value"`
-	}
-	err := graphClient.makeGETAPICall(resource, nil, &marsh)
-	marsh.Tasks.setGraphClient(graphClient)
-	return marsh.Tasks, err
-}
